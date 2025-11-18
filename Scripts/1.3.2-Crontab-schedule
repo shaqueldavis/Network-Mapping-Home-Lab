@@ -1,0 +1,6 @@
+# Add the following lines to your cron service to perform a nmap host scan using the specified script morning, afternoon, and night.
+# The script will ensure that the scan runs for only one week.
+
+0 8 * * *  /home/youruser/nmap-weekly/run-nmap-if-week.sh >> /home/youruser/nmap-weekly/cron.log 2>&1
+0 14 * * * /home/youruser/nmap-weekly/run-nmap-if-week.sh >> /home/youruser/nmap-weekly/cron.log 2>&1
+0 20 * * * /home/youruser/nmap-weekly/run-nmap-if-week.sh >> /home/youruser/nmap-weekly/cron.log 2>&1
