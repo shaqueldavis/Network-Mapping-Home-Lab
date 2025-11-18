@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# run-nmap-if-week.sh
+# Runs an nmap host discovery scan (greppable output only) if today is within START..END (inclusive).
+# Edit START_DATE or SUBNET at top or override via environment on the command line.
+
+# --- CONFIG ---
+START_DATE="${START_DATE:-$(date +%Y-%m-%d)}"
+END_DATE="${END_DATE:-$(date -d "$START_DATE +6 days" +%Y-%m-%d)}"
+
+# Replace this with your LAN/subnet if desired
+SUBNET="${SUBNET:-192.168.1.0/24}"
+
+# Output directory (will be created if missing)
+OUTDIR="${OUTDIR:-$HOME/Desktop/Github/Network_Mapping/Host_Scans}"
+mkdir -p "$OUTDIR"
+
+# Nmap path
+NMAP="/opt/bin/nmap"
+
+# --- DATE CHECK ---
+TODAY="$(date +%Y-%m-%d)"
+if [[ "$TODAY" < "$START_DATE" || "$TODAY" > "$END_DATE" ]]; then
+  # outside desired week; exit quietly
+  exit 0
+fi
+
+# --- PREPARE OUTPUT FILE (single greppable file) ---
+TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
+OUTFILE="$OUTDIR/nmap-scan-${TIMESTAMP}.gnmap"
+
+# Use sudo if available passwordlessly; otherwise run as current user.
+if sudo -n true 2>/dev/null; then
+  SUDO="sudo"
+else
+  SUDO=""
+fi
+
+# <<< ADDED: print a clear timestamped header so cron.log is easy to read
+echo "=== [$(date '+%F %T %Z')] Running scheduled Nmap scan (output: $OUTFILE) ==="
+# <<< END ADDED
+
+# Run nmap host discovery with greppable output only (-sn = ping/host discovery).
+${SUDO} "$NMAP" -sn "$SUBNET" -oG "$OUTFILE"
+RC=$?
+
+# <<< ADDED: print a footer summarizing result and exit code for easy log parsing
+echo "=== [$(date '+%F %T %Z')] Nmap finished (exit code: $RC) ==="
+# <<< END ADDED
+
+exit $RC
